@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
+import org.apache.wicket.RedirectException;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
@@ -52,6 +53,10 @@ public class BlobPage extends RepositoryPage {
 		final String blobPath = WicketUtils.getPath(params);
 		String [] encodings = getEncodings();
 
+		if (StringUtils.isEmpty(objectId) && StringUtils.isEmpty(blobPath)) {
+			throw new RedirectException(TreePage.class, WicketUtils.newRepositoryParameter(repositoryName));
+		}
+
 		if (StringUtils.isEmpty(blobPath)) {
 			// blob by objectid
 
@@ -74,7 +79,7 @@ public class BlobPage extends RepositoryPage {
 			}
 
 			// see if we should redirect to the doc page
-			MarkupProcessor processor = new MarkupProcessor(app().settings());
+			MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
 			for (String ext : processor.getMarkupExtensions()) {
 				if (ext.equals(extension)) {
 					setResponsePage(DocPage.class, params);
@@ -132,6 +137,7 @@ public class BlobPage extends RepositoryPage {
 						table = missingBlob(blobPath, commit);
 					} else {
 						table = generateSourceView(source, extension, type == 1);
+						addBottomScriptInline("jQuery(prettyPrint);");
 					}
 					add(new Label("blobText", table).setEscapeModelStrings(false));
 					add(new Image("blobImage").setVisible(false));
@@ -145,6 +151,7 @@ public class BlobPage extends RepositoryPage {
 					table = missingBlob(blobPath, commit);
 				} else {
 					table = generateSourceView(source, null, false);
+					addBottomScriptInline("jQuery(prettyPrint);");
 				}
 				add(new Label("blobText", table).setEscapeModelStrings(false));
 				add(new Image("blobImage").setVisible(false));
@@ -188,7 +195,8 @@ public class BlobPage extends RepositoryPage {
 		} else {
 			sb.append("<pre class=\"plainprint\">");
 		}
-		lines = StringUtils.escapeForHtml(source, true).split("\n");
+		final int tabLength = app().settings().getInteger(Keys.web.tabLength, 4);
+		lines = StringUtils.escapeForHtml(source, true, tabLength).split("\n");
 
 		sb.append("<table width=\"100%\"><tbody>");
 
@@ -216,6 +224,11 @@ public class BlobPage extends RepositoryPage {
 	@Override
 	protected String getPageName() {
 		return getString("gb.view");
+	}
+
+	@Override
+	protected boolean isCommitPage() {
+		return true;
 	}
 
 	@Override

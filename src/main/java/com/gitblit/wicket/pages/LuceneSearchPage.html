@@ -24,6 +24,7 @@
 			<div class="span3">
 				<h3><wicket:message key="gb.repositories"></wicket:message></h3>
 				<select wicket:id="repositories" ></select>
+				<label><input type="checkbox" wicket:id="allrepos" /> <span><wicket:message key="gb.allRepositories"></wicket:message></span></label>
 			</div>
 			<div class="span9" style="margin-left:10px">
 				<div>
@@ -51,7 +52,9 @@
 						</div>
 					</div>
 					<div style="margin-left:10px;" class="span2">
-						<wicket:message key="gb.queryHelp"></wicket:message>
+						<wicket:message key="gb.queryHelp">
+						  <a target="_new" wicket:id="querySyntax"><wicket:message key="gb.querySyntax"/></a>
+						</wicket:message>
 					</div>
 				</div>
 			</div>

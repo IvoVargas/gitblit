@@ -41,6 +41,8 @@ import com.gitblit.utils.DeepCopier;
 import com.gitblit.utils.ModelUtils;
 import com.gitblit.utils.ObjectCache;
 import com.gitblit.utils.StringUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Project manager handles project-related functions.
@@ -48,6 +50,7 @@ import com.gitblit.utils.StringUtils;
  * @author James Moger
  *
  */
+@Singleton
 public class ProjectManager implements IProjectManager {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -68,6 +71,7 @@ public class ProjectManager implements IProjectManager {
 
 	private FileBasedConfig projectConfigs;
 
+	@Inject
 	public ProjectManager(
 			IRuntimeManager runtimeManager,
 			IUserManager userManager,
@@ -178,19 +182,20 @@ public class ProjectManager implements IProjectManager {
 		map.put("", configs.get(""));
 
 		for (RepositoryModel model : repositoryManager.getRepositoryModels(user)) {
-			String rootPath = StringUtils.getRootPath(model.name).toLowerCase();
-			if (!map.containsKey(rootPath)) {
+			String projectPath = StringUtils.getRootPath(model.name);
+			String projectKey = projectPath.toLowerCase();
+			if (!map.containsKey(projectKey)) {
 				ProjectModel project;
-				if (configs.containsKey(rootPath)) {
+				if (configs.containsKey(projectKey)) {
 					// clone the project model because it's repository list will
 					// be tailored for the requesting user
-					project = DeepCopier.copy(configs.get(rootPath));
+					project = DeepCopier.copy(configs.get(projectKey));
 				} else {
-					project = new ProjectModel(rootPath);
+					project = new ProjectModel(projectPath);
 				}
-				map.put(rootPath, project);
+				map.put(projectKey, project);
 			}
-			map.get(rootPath).addRepository(model);
+			map.get(projectKey).addRepository(model);
 		}
 
 		// sort projects, root project first
